@@ -1,0 +1,14 @@
+# This file should override whatever file you may have in your home dir
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+[*.{md,purs}]
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+[{config.yml,package.json}]
+indent_size = 2

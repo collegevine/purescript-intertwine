@@ -1,0 +1,22 @@
+{
+  "name": "intertwine",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "output"
+  ],
+  "dependencies": {
+    "purescript-console": "^4.2.0",
+    "purescript-effect": "^2.0.0",
+    "purescript-generics-rep": "^6.1.0",
+    "purescript-maybe": "^4.0.0",
+    "purescript-prelude": "^4.1.0",
+    "purescript-strings": "^4.0.1",
+    "purescript-unicode": "^4.0.1"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^4.0.0",
+    "purescript-test-unit": "^14.0.0"
+  }
+}
