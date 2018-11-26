@@ -1,0 +1,16 @@
+version: 2.1
+
+jobs:
+  build:
+    working_directory: ~/cv
+
+    docker:
+    - image: circleci/node:8.11.4-stretch
+
+    parallelism: 1
+
+    steps:
+    - checkout: { path: "~/cv" }
+    - run: npx yarn@1.9.4
+    - run: npx bower install
+    - run: npx pulp test
