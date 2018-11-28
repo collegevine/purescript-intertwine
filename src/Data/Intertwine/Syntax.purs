@@ -1,6 +1,6 @@
 module Data.Intertwine.Syntax
-    ( class Syntax, atom, synApply, synInject, alt, (<<*>>), (<<$>>), (<<|>>)
-    , dropUnit, (*>>)
+    ( class Syntax, atom, synApply, synInject, alt, (<|*|>), (<|$|>), (<|||>)
+    , dropUnit, (*|>)
     , Printer, print
     , Parser, parse
     ) where
@@ -116,16 +116,16 @@ class Syntax syntax where
     alt :: forall a state. syntax state a -> syntax state a -> syntax state a
 
 
-infixr 5 synApply as <<*>>
-infixr 5 synInject as <<$>>
-infixl 2 alt as <<|>>
+infixr 5 synApply as <|*|>
+infixr 5 synInject as <|$|>
+infixl 2 alt as <|||>
 
-infixr 5 dropUnit as *>>
+infixr 5 dropUnit as *|>
 
 -- Combines two printers/parsers similarly to `synApply`, but ignoring the left
 -- printer/parser, provided it returns/consumes a unit.
 dropUnit :: forall a syntax state. Syntax syntax => syntax state Unit -> syntax state a -> syntax state a
-dropUnit u ab = i <<$>> u <<*>> ab
+dropUnit u ab = i <|$|> u <|*|> ab
     where i = Iso { apply: Just <<< Tuple unit, inverse: Just <<< snd }
 
 

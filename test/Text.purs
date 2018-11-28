@@ -3,14 +3,6 @@
 -- can be used to implement reversible printers/parsers for a simple case where
 -- the input of parsing (aka output of printing) is a text string.
 --
--- We first create three primitives using the `atom` operation:
---
---      * `str` for parsing/printing strings
---      * `int` for parsing/printing integer numbers
---      * `lit` to denote literal strings in the input/output
---
--- We then combine those primitives to encode a printer/parser for a sum type T.
---
 -- The test itself enumerates a few concrete examples, and for each one makes
 -- sure that `printer >>> parser == identity`. A better approach would be to
 -- employ QuickCheck to prove that this property holds for any input. This is
@@ -23,7 +15,7 @@ import Prelude
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Intertwine.MkIso (iso)
-import Data.Intertwine.Syntax (class Syntax, parse, print, (*>>), (<<$>>), (<<*>>), (<<|>>))
+import Data.Intertwine.Syntax (class Syntax, parse, print, (*|>), (<|$|>), (<|*|>), (<|||>))
 import Data.Intertwine.Text (int, lit, str)
 import Data.Maybe (fromJust)
 import Data.Symbol (SProxy(..))
@@ -43,9 +35,9 @@ instance showT :: Show T where show = genericShow
 
 p :: forall syn. Syntax syn => syn String T
 p =
-          iso (SProxy :: SProxy "A") <<$>> lit "A:"
-    <<|>> iso (SProxy :: SProxy "B") <<$>> lit "B::" *>> str
-    <<|>> iso (SProxy :: SProxy "C") <<$>> lit "C--" *>> int <<*>> lit "/" *>> int
+          iso (SProxy :: SProxy "A") <|$|> lit "A:"
+    <|||> iso (SProxy :: SProxy "B") <|$|> lit "B::" *|> str
+    <|||> iso (SProxy :: SProxy "C") <|$|> lit "C--" *|> int <|*|> lit "/" *|> int
 
 allTests :: TestSuite
 allTests = suite "Syntax for parsing/printing strings" do
