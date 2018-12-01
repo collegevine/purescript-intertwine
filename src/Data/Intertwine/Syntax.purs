@@ -1,6 +1,8 @@
 module Data.Intertwine.Syntax
     ( class Syntax, atom, synApply, synInject, alt, (<|*|>), (<|$|>), (<|||>)
     , dropUnit, (*|>)
+    , Ctor(..)
+    , injectConstructor, (<|:|>)
     , Printer, print
     , Parser, parse
     ) where
@@ -8,9 +10,11 @@ module Data.Intertwine.Syntax
 import Prelude
 
 import Control.Alt ((<|>))
-import Data.Maybe (Maybe(..))
-import Data.Tuple (Tuple(..), fst, snd, swap)
 import Data.Intertwine.Iso (Iso(..))
+import Data.Intertwine.MkIso (class MkIso, iso)
+import Data.Maybe (Maybe(..))
+import Data.Symbol (SProxy(..))
+import Data.Tuple (Tuple(..), fst, snd, swap)
 
 -- An implementation of reversible printer-parser, based on this paper:
 -- http://www.informatik.uni-marburg.de/~rendel/unparse/rendel10invertible.pdf
@@ -127,6 +131,28 @@ infixr 5 dropUnit as *|>
 dropUnit :: forall a syntax state. Syntax syntax => syntax state Unit -> syntax state a -> syntax state a
 dropUnit u ab = i <|$|> u <|*|> ab
     where i = Iso { apply: Just <<< Tuple unit, inverse: Just <<< snd }
+
+
+-- This type is equivalent to `SProxy`, but provided here separately for the
+-- purpose of shortening the code in combination with the `<|:|>` operator. See
+-- comments on `injectConstructor`.
+data Ctor (name :: Symbol) = Ctor
+
+infixr 5 injectConstructor as <|:|>
+
+-- Meant to be used as infix operator, binds a constructor, whose name is
+-- encoded in the `Ctor` value, to the given parser/printer.
+--
+-- For example:
+--
+--    data T = A String | B (Maybe Int)
+--
+--    syntax =
+--            (Ctor::Ctor "A") <|$|> value
+--      <<|>> (Ctor::Ctor "B") <|$|> query "id"
+--
+injectConstructor :: forall name args a syntax route. MkIso a name args => Syntax syntax => Ctor name -> syntax route args -> syntax route a
+injectConstructor _ args = synInject (iso (SProxy :: SProxy name)) args
 
 
 --

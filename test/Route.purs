@@ -4,7 +4,7 @@ import Prelude
 
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.Intertwine.Route (R(..), PathInfo(..), RoutesDef, empty, exactly, literal, parseRoute, printRoute, query, value, (*|>), (<|$|>), (<|*|>), (<|||>))
+import Data.Intertwine.Route (Ctor(..), PathInfo(..), RoutesDef, empty, exactly, literal, parseRoute, printRoute, query, value, (*|>), (<|*|>), (<|:|>), (<|||>))
 import Data.Maybe (Maybe(..), fromJust)
 import Data.String as String
 import Data.Tuple (Tuple(..))
@@ -34,17 +34,17 @@ instance showSubRoute :: Show SubRoute where show = genericShow
 
 route :: RoutesDef PathInfo Route
 route =
-          (R::R "Root") <|$|> empty
-    <|||> (R::R "A") <|$|> literal "a"
-    <|||> (R::R "B") <|$|> literal "b" *|> value
-    <|||> (R::R "C") <|$|> literal "fourty-two" *|> exactly 42 <|*|> exactly (Just 42)
-    <|||> (R::R "C") <|$|> literal "c" *|> literal "d" *|> value <|*|> query "second"
-    <|||> (R::R "D") <|$|> literal "d" *|> subRoute
+          (Ctor::Ctor "Root") <|:|> empty
+    <|||> (Ctor::Ctor "A") <|:|> literal "a"
+    <|||> (Ctor::Ctor "B") <|:|> literal "b" *|> value
+    <|||> (Ctor::Ctor "C") <|:|> literal "fourty-two" *|> exactly 42 <|*|> exactly (Just 42)
+    <|||> (Ctor::Ctor "C") <|:|> literal "c" *|> literal "d" *|> value <|*|> query "second"
+    <|||> (Ctor::Ctor "D") <|:|> literal "d" *|> subRoute
 
 subRoute :: RoutesDef PathInfo SubRoute
 subRoute =
-          (R::R "X") <|$|> value
-    <|||> (R::R "Y") <|$|> literal "y" *|> query "s"
+          (Ctor::Ctor "X") <|:|> value
+    <|||> (Ctor::Ctor "Y") <|:|> literal "y" *|> query "s"
 
 allTests :: TestSuite
 allTests = suite "Printing/parsing routes" do

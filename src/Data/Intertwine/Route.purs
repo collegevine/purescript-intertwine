@@ -3,19 +3,18 @@
 module Data.Intertwine.Route
     ( class IsRoute, routeEmpty, routeSegments, routeQueryString
     , PathInfo(..)
-    , module Data.Intertwine.Route.PathPiece
+    , RoutesDef
     , parseRoute
     , printRoute
+
     , empty
     , literal
     , value
     , exactly
     , query
-    , R(..)
-    , injectConstructor
-    , (<|$|>)
+
     , module SyntaxReexport
-    , RoutesDef
+    , module Data.Intertwine.Route.PathPiece
     ) where
 
 import Prelude
@@ -23,12 +22,10 @@ import Prelude
 import Control.MonadZero (guard, (<|>))
 import Data.Array as Array
 import Data.Intertwine.Iso (Iso(..))
-import Data.Intertwine.MkIso (class MkIso, iso)
 import Data.Intertwine.Route.PathPiece (class PathPiece, toPathSegment, fromPathSegment)
-import Data.Intertwine.Syntax ((<|*|>), (*|>), (<|||>)) as SyntaxReexport
-import Data.Intertwine.Syntax (class Syntax, atom, synInject, print, parse)
+import Data.Intertwine.Syntax (Ctor(..), (<|$|>), (<|:|>), (<|*|>), (*|>), (<|||>)) as SyntaxReexport
+import Data.Intertwine.Syntax (class Syntax, atom, parse, print)
 import Data.Maybe (Maybe(..))
-import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
 import Optic.Getter ((^.))
@@ -130,26 +127,6 @@ query key = mkAtom prnt \pi -> pars pi <|> fallback pi
         fallback r =
             Just $ Tuple r Nothing
 
-
--- This type is equivalent to `SProxy`, but provided here separately for the
--- purpose of shortening the code. See comments on `injectConstructor`.
-data R (name :: Symbol) = R
-
-infixr 5 injectConstructor as <|$|>
-
--- Meant to be used as infix operator, binds a constructor, whose name is
--- encoded in the `R` value, to the given parser/printer.
---
--- For example:
---
---    data T = A String | B (Maybe Int)
---
---    syntax =
---            (R::R "A") <|$|> value
---      <<|>> (R::R "B") <|$|> query "id"
---
-injectConstructor :: forall name args a syntax route. MkIso a name args => Syntax syntax => R name -> syntax route args -> syntax route a
-injectConstructor _ args = synInject (iso (SProxy :: SProxy name)) args
 
 
 --
