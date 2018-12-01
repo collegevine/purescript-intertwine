@@ -2,7 +2,8 @@
 -- routes
 module Data.Intertwine.Route
     ( class IsRoute, routeEmpty, routeSegments, routeQueryString
-    , class PathPiece, toPathSegment, fromPathSegment
+    , PathInfo(..)
+    , module Data.Intertwine.Route.PathPiece
     , parseRoute
     , printRoute
     , empty
@@ -12,10 +13,10 @@ module Data.Intertwine.Route
     , query
     , R(..)
     , injectConstructor
-    , (<<$>>)
+    , (<|$|>)
     , module SyntaxReexport
     , RoutesDef
-) where
+    ) where
 
 import Prelude
 
@@ -23,6 +24,7 @@ import Control.MonadZero (guard, (<|>))
 import Data.Array as Array
 import Data.Intertwine.Iso (Iso(..))
 import Data.Intertwine.MkIso (class MkIso, iso)
+import Data.Intertwine.Route.PathPiece (class PathPiece, toPathSegment, fromPathSegment)
 import Data.Intertwine.Syntax ((<|*|>), (*|>), (<|||>)) as SyntaxReexport
 import Data.Intertwine.Syntax (class Syntax, atom, synInject, print, parse)
 import Data.Maybe (Maybe(..))
@@ -30,17 +32,28 @@ import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
 import Optic.Getter ((^.))
+import Optic.Lens (lens)
 import Optic.Setter ((%~), (.~))
 import Optic.Types (Lens')
 
+-- This class abstracts the idea of the "route" data type, making it possible
+-- for the primitive in this module to work with data types from other
+-- libraries.
 class IsRoute r where
     routeEmpty :: r
     routeSegments :: Lens' r (Array String)
     routeQueryString :: Lens' r (Obj.Object String)
 
-class PathPiece a where
-    toPathSegment :: a -> String
-    fromPathSegment :: String -> Maybe a
+
+-- The default representation of a route: here the route is represented as a
+-- sequence of path segments and a dictionary of querystring parameters.
+data PathInfo = PathInfo (Array String) (Obj.Object String)
+
+instance pathIsRoute :: IsRoute PathInfo where
+    routeEmpty = PathInfo [] Obj.empty
+    routeSegments = lens (\(PathInfo s _) -> s) (\(PathInfo _ q) s -> PathInfo s q)
+    routeQueryString = lens (\(PathInfo _ q) -> q) (\(PathInfo s _) q -> PathInfo s q)
+
 
 -- Syntax definition for a set of routes of type `a`.
 type RoutesDef route a = forall syntax. Syntax syntax => syntax route a
@@ -122,7 +135,7 @@ query key = mkAtom prnt \pi -> pars pi <|> fallback pi
 -- purpose of shortening the code. See comments on `injectConstructor`.
 data R (name :: Symbol) = R
 
-infixr 5 injectConstructor as <<$>>
+infixr 5 injectConstructor as <|$|>
 
 -- Meant to be used as infix operator, binds a constructor, whose name is
 -- encoded in the `R` value, to the given parser/printer.
@@ -132,8 +145,8 @@ infixr 5 injectConstructor as <<$>>
 --    data T = A String | B (Maybe Int)
 --
 --    syntax =
---            (R::R "A") <<$>> value
---      <<|>> (R::R "B") <<$>> query "id"
+--            (R::R "A") <|$|> value
+--      <<|>> (R::R "B") <|$|> query "id"
 --
 injectConstructor :: forall name args a syntax route. MkIso a name args => Syntax syntax => R name -> syntax route args -> syntax route a
 injectConstructor _ args = synInject (iso (SProxy :: SProxy name)) args
