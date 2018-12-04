@@ -1,5 +1,16 @@
 {
-  "name": "intertwine",
+  "name": "purescript-intertwine",
+  "description": "PureScript's implementation of Argonaut",
+  "authors": [
+    "Fyodor Soikin <fyodor@collegevine.com>",
+    "CollegeVine"
+  ],
+  "license": "MIT",
+  "repository": {                                                                                                                                                                 
+    "type": "git",                                                                                                                                                                
+    "url": "https://github.com/collegevine/purescript-intertwine.git"                                                                                                             
+  },                                                                                                                                                                               
+
   "ignore": [
     "**/.*",
     "node_modules",
