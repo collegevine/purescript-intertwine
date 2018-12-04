@@ -18,8 +18,6 @@
     "output"
   ],
   "dependencies": {
-    "purescript-console": "^4.2.0",
-    "purescript-effect": "^2.0.0",
     "purescript-foreign": "^5.0.0",
     "purescript-foreign-object": "^1.0.0",
     "purescript-generics-rep": "^6.1.0",
