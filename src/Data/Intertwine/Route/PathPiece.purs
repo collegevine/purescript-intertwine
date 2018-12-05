@@ -9,6 +9,9 @@ import Data.Int as Int
 import Data.Maybe (Maybe(..))
 import Data.UUID as UUID
 
+-- | This class makes a type suitable for participating in route
+-- | printing/parsing - i.e. to be the type of path segments and querystring
+-- | parameters.
 class PathPiece a where
     toPathSegment :: a -> String
     fromPathSegment :: String -> Maybe a

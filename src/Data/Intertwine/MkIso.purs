@@ -10,28 +10,29 @@ import Data.Symbol (SProxy(..))
 import Data.Tuple (Tuple(..))
 import Data.Intertwine.Iso (Iso(..))
 
--- This type class provides the function `iso`, which operates on a sum type. It
--- takes the name of a constructor of that type and returns an `Iso` instance
--- that converts between the sum type itself and the chosen constructor's
--- parameters that are all tupled together, starting with the right ones.
---
--- For example:
---
---     data T = A | B String | C Int Number | D Boolean Int String
---
---     iso (SProxy :: SProxy "A") :: Iso T Unit
---     iso (SProxy :: SProxy "B") :: Iso T String
---     iso (SProxy :: SProxy "C") :: Iso T (Tuple Int Number)
---     iso (SProxy :: SProxy "D") :: Iso T (Tuple Boolean (Tuple Int String))
---
--- Such tupling is necessary for the implementation of both printers and parsers
--- from the same code structure. See ../Syntax.purs for a more detailed
--- explanation.
---
--- The resulting Iso can convert "forward" (i.e. from T to the corresponding
--- tuple) only when the given T value was constructed with the given
--- constructor, returning `Nothing` for all other constructors. It can always
--- convert "backward" (i.e. from tuple to T).
+-- | This type class provides the function `iso`, which operates on a sum type.
+-- | It takes the name of a constructor of that type and returns an `Iso`
+-- | instance that converts between the sum type itself and the chosen
+-- | constructor's parameters that are all tupled together, starting with the
+-- | right ones.
+-- |
+-- | For example:
+-- |
+-- |     data T = A | B String | C Int Number | D Boolean Int String
+-- |
+-- |     iso (SProxy :: SProxy "A") :: Iso T Unit
+-- |     iso (SProxy :: SProxy "B") :: Iso T String
+-- |     iso (SProxy :: SProxy "C") :: Iso T (Tuple Int Number)
+-- |     iso (SProxy :: SProxy "D") :: Iso T (Tuple Boolean (Tuple Int String))
+-- |
+-- | Such tupling is necessary for the implementation of both printers and
+-- | parsers from the same code structure. See ../Syntax.purs for a more
+-- | detailed explanation.
+-- |
+-- | The resulting Iso can convert "forward" (i.e. from T to the corresponding
+-- | tuple) only when the given T value was constructed with the given
+-- | constructor, returning `Nothing` for all other constructors. It can always
+-- | convert "backward" (i.e. from tuple to T).
 --
 -- Class parameters:
 --
@@ -47,8 +48,9 @@ import Data.Intertwine.Iso (Iso(..))
 -- NOTE: the implementation relies on the fact that the compiler generates
 -- `Sum` instances as a chain, even though they could technically form a tree.
 -- That is, we only consider the case when the first argument of `Sum` is a
--- `Constructor`, disregarding the possibility of it being another `Sum`. As far
--- as I can tell, the compiler always generates generic rep types this way.
+-- `Constructor`, disregarding the possibility of it being another `Sum`. As
+-- far as I can tell, the compiler always generates generic rep types this
+-- way.
 class MkIso t ctor tuple | t ctor -> tuple where
     iso :: SProxy ctor -> Iso t tuple
 
@@ -96,8 +98,8 @@ else instance mkIso :: (Generic t rep, MkIso rep ctor tuple) => MkIso t ctor tup
             Iso repIso = iso (SProxy :: SProxy ctor)
 
 
--- This type class takes the Generic-rep representation of sum type arguments
--- and converts them into a series of nested tuples.
+-- | This type class takes the Generic-rep representation of sum type arguments
+-- | and converts them into a series of nested tuples.
 --
 -- NOTE: similarly to the `MkIso` implementation, we rely here on the fact that
 -- the first argument of `Product` is always an `Argument`, even though

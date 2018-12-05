@@ -33,17 +33,17 @@ import Optic.Lens (lens)
 import Optic.Setter ((%~), (.~))
 import Optic.Types (Lens')
 
--- This class abstracts the idea of the "route" data type, making it possible
--- for the primitive in this module to work with data types from other
--- libraries.
+-- | This class abstracts the idea of the "route" data type, making it possible
+-- | for the primitive in this module to work with data types from other
+-- | libraries.
 class IsRoute r where
     routeEmpty :: r
     routeSegments :: Lens' r (Array String)
     routeQueryString :: Lens' r (Obj.Object String)
 
 
--- The default representation of a route: here the route is represented as a
--- sequence of path segments and a dictionary of querystring parameters.
+-- | The default representation of a route: here the route is represented as a
+-- | sequence of path segments and a dictionary of querystring parameters.
 data PathInfo = PathInfo (Array String) (Obj.Object String)
 
 instance pathIsRoute :: IsRoute PathInfo where
@@ -52,7 +52,7 @@ instance pathIsRoute :: IsRoute PathInfo where
     routeQueryString = lens (\(PathInfo _ q) -> q) (\(PathInfo s _) q -> PathInfo s q)
 
 
--- Syntax definition for a set of routes of type `a`.
+-- | Syntax definition for a set of routes of type `a`.
 type RoutesDef route a = forall syntax. Syntax syntax => syntax route a
 
 parseRoute :: forall a route. IsRoute route => RoutesDef route a -> route -> Maybe a
@@ -64,8 +64,8 @@ parseRoute def path = do
 printRoute :: forall a route. IsRoute route => RoutesDef route a -> a -> Maybe route
 printRoute def = print def routeEmpty
 
--- Empty route. During printing doesn't produce any output, during parsing makes
--- sure that there are no URL segments remaining.
+-- | Empty route. During printing doesn't produce any output, during parsing
+-- | makes sure that there are no URL segments remaining.
 empty :: forall route. IsRoute route => RoutesDef route Unit
 empty = mkAtom prnt pars
     where
@@ -73,8 +73,9 @@ empty = mkAtom prnt pars
         pars r | Array.null (r^.routeSegments) = Just $ Tuple r unit
         pars _ = Nothing
 
--- Literal string. During printing outputs the given string, during parsing
--- consumes the next URL segment and makes sure it's equal to the given string.
+-- | Literal string. During printing outputs the given string, during parsing
+-- | consumes the next URL segment and makes sure it's equal to the given
+-- | string.
 literal :: forall route. IsRoute route => String -> RoutesDef route Unit
 literal str = mkAtom prnt pars
     where
@@ -85,9 +86,10 @@ literal str = mkAtom prnt pars
             guard $ l.head == str
             pure $ Tuple (r # routeSegments .~ l.tail) unit
 
--- A primitive that encodes a constant value. During printing, the printer
--- succeeds iff the value beign printed is equal to `theValue`, otherwise fails.
--- During parsing, the parser returns `theValue` without consuming any input.
+-- | A primitive that encodes a constant value. During printing, the printer
+-- | succeeds iff the value beign printed is equal to `theValue`, otherwise
+-- | fails. During parsing, the parser returns `theValue` without consuming any
+-- | input.
 exactly :: forall a route. Eq a => a -> RoutesDef route a
 exactly theValue = mkAtom prnt pars
     where
@@ -95,10 +97,11 @@ exactly theValue = mkAtom prnt pars
         prnt _ _ = Nothing
         pars pi = Just $ Tuple pi theValue
 
--- A value of the given type as URL segment. During printing, the printer
--- outputs the value as a URL segment, using the `PathPiece` instance to convert
--- it to a string. During parsing, the parser consumes a URL segment and tries
--- to parse it into a value of the given type using the `PathPiece` instance.
+-- | A value of the given type as URL segment. During printing, the printer
+-- | outputs the value as a URL segment, using the `PathPiece` instance to
+-- | convert it to a string. During parsing, the parser consumes a URL segment
+-- | and tries to parse it into a value of the given type using the `PathPiece`
+-- | instance.
 value :: forall a route. IsRoute route => PathPiece a => RoutesDef route a
 value = mkAtom prnt pars
     where
@@ -109,8 +112,9 @@ value = mkAtom prnt pars
             a <- fromPathSegment l.head
             pure $ Tuple (r # routeSegments .~ l.tail) a
 
--- QueryString value. During printing adds the printed value to the QueryString
--- under given key. During parsing, looks up the value in the QueryString.
+-- | QueryString value. During printing adds the printed value to the
+-- | QueryString under given key. During parsing, looks up the value in the
+-- | QueryString.
 query :: forall a route. IsRoute route => PathPiece a => String -> RoutesDef route (Maybe a)
 query key = mkAtom prnt \pi -> pars pi <|> fallback pi
     where
@@ -136,9 +140,9 @@ query key = mkAtom prnt \pi -> pars pi <|> fallback pi
 appendSeg :: forall route. IsRoute route => String -> route -> route
 appendSeg seg r = r # routeSegments %~ (_ `Array.snoc` seg)
 
--- Helper function for producing an Iso out of a print function and a parse
--- function. It's here solely to shorten the code of primitives above by
--- removing some of the `Tuple` cruft from them.
+-- | Helper function for producing an Iso out of a print function and a parse
+-- | function. It's here solely to shorten the code of primitives above by
+-- | removing some of the `Tuple` cruft from them.
 mkAtom :: forall a route
      . (route -> a -> Maybe route)        -- ^ Printing function
     -> (route -> Maybe (Tuple route a))   -- ^ Parsing function

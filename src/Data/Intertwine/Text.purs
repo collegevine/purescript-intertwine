@@ -1,4 +1,4 @@
--- Syntax primitives for printing/parsing plain text
+-- | Syntax primitives for printing/parsing plain text
 module Data.Intertwine.Text
     ( str
     , int

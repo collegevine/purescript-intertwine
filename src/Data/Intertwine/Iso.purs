@@ -5,8 +5,8 @@ module Data.Intertwine.Iso(
 import Prelude
 import Data.Maybe (Maybe(..))
 
--- Partial isomorphism - a pair of functions that can convert between two types,
--- with a possibility of failure.
+-- | Partial isomorphism - a pair of functions that can convert between two
+-- | types, with a possibility of failure.
 data Iso a b = Iso {
     apply :: a -> Maybe b,
     inverse :: b -> Maybe a
