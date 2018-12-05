@@ -129,7 +129,7 @@ class Syntax syntax where
 -- |     a <|*|> b :: syntax (a, b)
 infixr 5 synApply as <|*|>
 
--- | Injects an @Iso into a printer/parser on the right side, producing a
+-- | Injects an `Iso` into a printer/parser on the right side, producing a
 -- | printer/parser of the type that is left type of the `Iso`.
 -- |
 -- |     i :: Iso a (b, (c, d))
@@ -143,7 +143,7 @@ infixl 2 alt as <|||>
 
 -- | Combines a printer/parser that consumes/returns a unit with another
 -- | printer/parser in a way that the unit is dropped instead of becoming part
--- | of a tuple, as it would with @(<|*|>)
+-- | of a tuple, as it would with `<|*|>`
 -- |
 -- |     a :: syntax Unit
 -- |     b :: syntax a
@@ -158,8 +158,8 @@ dropUnit u ab = i <|$|> u <|*|> ab
 
 
 -- | This type is equivalent to `SProxy`, but provided here separately for the
--- | purpose of shortening the code in combination with the `<|:|>` operator.
--- | See comments on `injectConstructor`.
+-- | purpose of shortening the code in combination with the `<|:|>` operator
+-- | (see comments there).
 data Ctor (name :: Symbol) = Ctor
 
 -- | Binds a constructor, whose name is encoded in the `Ctor` value, to the
@@ -167,14 +167,15 @@ data Ctor (name :: Symbol) = Ctor
 -- |
 -- | For example:
 -- |
--- |    data T = A String | B (Maybe Int)
+-- |     data T = A String | B (Maybe Int)
 -- |
--- |    syntax = (Ctor::Ctor "A") <|$|> value <<|>> (Ctor::Ctor "B") <|$|> query
--- |            "id"
+-- |     syntax =
+-- |              (Ctor::Ctor "A") <|:|> value
+-- |        <|||> (Ctor::Ctor "B") <|:|> query "id"
 -- |
 infixr 5 injectConstructor as <|:|>
 
--- | Meant to be used as infix operator @(<|:|>), see comments on it.
+-- | Meant to be used as infix operator `<|:|>`, see comments on it.
 injectConstructor :: forall name args a syntax route. MkIso a name args => Syntax syntax => Ctor name -> syntax route args -> syntax route a
 injectConstructor _ args = synInject (iso (SProxy :: SProxy name)) args
 
@@ -183,6 +184,7 @@ injectConstructor _ args = synInject (iso (SProxy :: SProxy name)) args
 -- Printer
 --
 
+-- | An implementation of `Syntax` for printing.
 newtype Printer state a = Printer (Tuple state a -> Maybe state)
 
 instance printerSyntax :: Syntax Printer where
@@ -195,6 +197,16 @@ instance printerSyntax :: Syntax Printer where
         pb $ Tuple state b
     alt (Printer p1) (Printer p2) = Printer \x -> p1 x <|> p2 x
 
+-- | Runs a reversible syntax definition for printing, given an initial printer
+-- | state.
+-- |
+-- | The first parameter is supposed to be a polymorphic reversible definition
+-- | such as:
+-- |
+-- |     s :: forall syntax. Syntax syntax => syntax a b
+-- |
+-- | Passing such parameter to this function would instantiate the `syntax` type
+-- | variable to `Printer`, and the printing will commence.
 print :: forall state a. Printer state a -> state -> a -> Maybe state
 print (Printer p) state a = p $ Tuple state a
 
@@ -203,6 +215,7 @@ print (Printer p) state a = p $ Tuple state a
 -- Parser
 --
 
+-- | An implementation of `Syntax` for parsing.
 newtype Parser state a = Parser (state -> Maybe (Tuple a state))
 
 instance parserSyntax :: Syntax Parser where
@@ -217,5 +230,15 @@ instance parserSyntax :: Syntax Parser where
         pure $ Tuple a s'
     alt (Parser p1) (Parser p2) = Parser \s -> p1 s <|> p2 s
 
+-- | Runs a reversible syntax definition for parsing, given an initial parser
+-- | state.
+-- |
+-- | The first parameter is supposed to be a polymorphic reversible definition
+-- | such as:
+-- |
+-- |     s :: forall syntax. Syntax syntax => syntax a b
+-- |
+-- | Passing such parameter to this function would instantiate the `syntax` type
+-- | variable to `Parser`, and the parsing will commence.
 parse :: forall state a. Parser state a -> state -> Maybe (Tuple a state)
 parse (Parser p) s = p s
