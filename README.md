@@ -158,7 +158,7 @@ data Foo
 r :: syntax PathInfo Foo
 r =
           (Ctor::Ctor "Bar") <|:|> z <|*|> x <|*|> y
-    <|||> (Ctor::Ctor "Bar") <|:|> p <|*|> q
+    <|||> (Ctor::Ctor "Baz") <|:|> p <|*|> q
 ```
 
 ### Actually using the syntax
