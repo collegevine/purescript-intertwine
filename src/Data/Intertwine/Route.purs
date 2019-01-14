@@ -25,13 +25,10 @@ import Data.Intertwine.Iso (Iso(..))
 import Data.Intertwine.Route.PathPiece (class PathPiece, toPathSegment, fromPathSegment)
 import Data.Intertwine.Syntax (Ctor(..), (<|$|>), (<|:|>), (<|*|>), (*|>), (<|||>)) as SyntaxReexport
 import Data.Intertwine.Syntax (class Syntax, atom, parse, print)
+import Data.Lens (Lens', lens, (^.), (%~), (.~))
 import Data.Maybe (Maybe(..))
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
-import Optic.Getter ((^.))
-import Optic.Lens (lens)
-import Optic.Setter ((%~), (.~))
-import Optic.Types (Lens')
 
 -- | This class abstracts the idea of the "route" data type, making it possible
 -- | for the primitive in this module to work with data types from other
