@@ -25,8 +25,7 @@
     "purescript-prelude": "^4.1.0",
     "purescript-profunctor-lenses": "^4.0.0",
     "purescript-strings": "^4.0.1",
-    "purescript-unicode": "^4.0.1",
-    "purescript-uuid": "^5.0.0"
+    "purescript-unicode": "^4.0.1"
   },
   "devDependencies": {
     "purescript-psci-support": "^4.0.0",

@@ -23,7 +23,3 @@ instance pathPieceString :: PathPiece String where
 instance pathPieceInt :: PathPiece Int where
     toPathSegment = show
     fromPathSegment = Int.fromString
-
-instance pathPieceUUID :: PathPiece UUID.UUID where
-    toPathSegment = show
-    fromPathSegment = UUID.parseUUID
