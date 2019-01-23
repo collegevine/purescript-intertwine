@@ -135,7 +135,7 @@ query key = mkAtom prnt \pi -> pars pi <|> fallback pi
 --
 
 appendSeg :: forall route. IsRoute route => String -> route -> route
-appendSeg seg r = r # routeSegments %~ (_ `Array.snoc` seg)
+appendSeg s r = r # routeSegments %~ (_ `Array.snoc` s)
 
 -- | Helper function for producing an Iso out of a print function and a parse
 -- | function. It's here solely to shorten the code of primitives above by
