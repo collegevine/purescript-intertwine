@@ -18,9 +18,9 @@ data Route
 
 routesDef :: forall syntax. Syntax syntax => syntax PathInfo Route
 routesDef =
-          (Ctor::Ctor "Home") <|:|> empty
-    <|||> (Ctor::Ctor "Profile") <|:|> literal "profile" *|> value
-    <|||> (Ctor::Ctor "Foo") <|:|> literal "foo" *|> query "id" <|*|> value
+          (Ctor::Ctor "Home") <|:|> end
+    <|||> (Ctor::Ctor "Profile") <|:|> seg "profile" *|> segValue <|* end
+    <|||> (Ctor::Ctor "Foo") <|:|> seg "foo" *|> query "id" <|*|> segValue <|* end
 
 printRoute routesDef Home == "/"
 printRoute routesDef (Profile "john") == "/profile/john"
@@ -40,9 +40,10 @@ Thus, a `syntax a b` can be seen as an isomorphism (of sorts) between `a` and `b
 ### Primitives
 The smallest building blocks of a syntax are primitive printing/parsing operations.
 In the example above three such operations are visible:
-* `literal` means "there should be a path segment with exactly this value here".
-* `value` means "this path segment matches the next route constructor parameter".
+* `seg` means "there should be a path segment with exactly this value here".
+* `segValue` means "this path segment matches the next route constructor parameter".
 * `query` means "this route constructor parameter matches querystring parameter with the given key".
+* `end` signifies end of the route.
 
 These primitives are provided in `Data.Intertwine.Route`, but it is also possible to define your own.
 
