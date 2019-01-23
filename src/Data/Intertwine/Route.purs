@@ -7,10 +7,10 @@ module Data.Intertwine.Route
     , parseRoute
     , printRoute
 
-    , empty
-    , literal
-    , value
-    , exactly
+    , end
+    , seg
+    , segValue
+    , constValue
     , query
 
     , module SyntaxReexport
@@ -61,20 +61,20 @@ parseRoute def path = do
 printRoute :: forall a route. IsRoute route => RoutesDef route a -> a -> Maybe route
 printRoute def = print def routeEmpty
 
--- | Empty route. During printing doesn't produce any output, during parsing
--- | makes sure that there are no URL segments remaining.
-empty :: forall route. IsRoute route => RoutesDef route Unit
-empty = mkAtom prnt pars
+-- | Signifies the end of the route. During printing doesn't produce any output,
+-- | during parsing makes sure that there are no URL segments remaining.
+end :: forall route. IsRoute route => RoutesDef route Unit
+end = mkAtom prnt pars
     where
         prnt pi _ = Just pi
         pars r | Array.null (r^.routeSegments) = Just $ Tuple r unit
         pars _ = Nothing
 
--- | Literal string. During printing outputs the given string, during parsing
--- | consumes the next URL segment and makes sure it's equal to the given
--- | string.
-literal :: forall route. IsRoute route => String -> RoutesDef route Unit
-literal str = mkAtom prnt pars
+-- | Path segment that is a literal string. During printing outputs the given
+-- | string, during parsing consumes the next URL segment and makes sure it's
+-- | equal to the given string.
+seg :: forall route. IsRoute route => String -> RoutesDef route Unit
+seg str = mkAtom prnt pars
     where
         prnt pi _ =
             Just $ appendSeg str pi
@@ -87,8 +87,8 @@ literal str = mkAtom prnt pars
 -- | succeeds iff the value beign printed is equal to `theValue`, otherwise
 -- | fails. During parsing, the parser returns `theValue` without consuming any
 -- | input.
-exactly :: forall a route. Eq a => a -> RoutesDef route a
-exactly theValue = mkAtom prnt pars
+constValue :: forall a route. Eq a => a -> RoutesDef route a
+constValue theValue = mkAtom prnt pars
     where
         prnt pi a | a == theValue = Just pi
         prnt _ _ = Nothing
@@ -99,8 +99,8 @@ exactly theValue = mkAtom prnt pars
 -- | convert it to a string. During parsing, the parser consumes a URL segment
 -- | and tries to parse it into a value of the given type using the `PathPiece`
 -- | instance.
-value :: forall a route. IsRoute route => PathPiece a => RoutesDef route a
-value = mkAtom prnt pars
+segValue :: forall a route. IsRoute route => PathPiece a => RoutesDef route a
+segValue = mkAtom prnt pars
     where
         prnt pi a =
             Just $ appendSeg (toPathSegment a) pi

@@ -1,6 +1,7 @@
 module Data.Intertwine.Syntax
     ( class Syntax, atom, synApply, synInject, alt, (<|*|>), (<|$|>), (<|||>)
-    , dropUnit, (*|>)
+    , dropUnitLeft, (*|>)
+    , dropUnitRight, (<|*)
     , Ctor(..)
     , injectConstructor, (<|:|>)
     , Printer, print
@@ -145,16 +146,31 @@ infixl 2 alt as <|||>
 -- | printer/parser in a way that the unit is dropped instead of becoming part
 -- | of a tuple, as it would with `<|*|>`
 -- |
--- |     a :: syntax Unit
--- |     b :: syntax a
--- |     a *|> b :: syntax a
-infixr 5 dropUnit as *|>
+-- |     u :: syntax Unit
+-- |     a :: syntax a
+-- |     u *|> a :: syntax a
+infixr 5 dropUnitLeft as *|>
 
 -- | Combines two printers/parsers similarly to `synApply`, but ignoring the
 -- | left printer/parser, provided it returns/consumes a unit.
-dropUnit :: forall a syntax state. Syntax syntax => syntax state Unit -> syntax state a -> syntax state a
-dropUnit u ab = i <|$|> u <|*|> ab
+dropUnitLeft :: forall a syntax state. Syntax syntax => syntax state Unit -> syntax state a -> syntax state a
+dropUnitLeft u ab = i <|$|> u <|*|> ab
     where i = Iso { apply: Just <<< Tuple unit, inverse: Just <<< snd }
+
+-- | Combines a printer/parser that consumes/returns a unit with another
+-- | printer/parser in a way that the unit is dropped instead of becoming part
+-- | of a tuple, as it would with `<|*|>`
+-- |
+-- |     u :: syntax Unit
+-- |     a :: syntax a
+-- |     a <|* u :: syntax a
+infixr 5 dropUnitRight as <|*
+
+-- | Combines two printers/parsers similarly to `synApply`, but ignoring the
+-- | right printer/parser, provided it returns/consumes a unit.
+dropUnitRight :: forall a syntax state. Syntax syntax => syntax state a -> syntax state Unit -> syntax state a
+dropUnitRight ab u = i <|$|> ab <|*|> u
+    where i = Iso { apply: \a -> Just $ Tuple a unit, inverse: Just <<< fst }
 
 
 -- | This type is equivalent to `SProxy`, but provided here separately for the
