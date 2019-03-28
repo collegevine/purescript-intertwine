@@ -25,6 +25,10 @@ routesDef =
 printRoute routesDef Home == "/"
 printRoute routesDef (Profile "john") == "/profile/john"
 printRoute routesDef (Foo 42 "bar") == "/foo/bar?id=42"
+
+parseRoute routesDef "/" == Home
+parseRoute routesDef "/profile/mary" == Profile "mary"
+parseRoute routesDef "/foo/blurp?id=5" == Foo 5 "blurp"
 ```
 
 ### Syntax
