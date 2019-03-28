@@ -16,7 +16,7 @@ import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Intertwine.MkIso (iso)
 import Data.Intertwine.Syntax (class Syntax, parse, print, (*|>), (<|$|>), (<|*|>), (<|||>))
-import Data.Intertwine.Text (int, lit, str)
+import Data.Intertwine.Text (int, lit, str, followedBy)
 import Data.Maybe (fromJust)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (fst)
@@ -36,21 +36,23 @@ instance showT :: Show T where show = genericShow
 p :: forall syn. Syntax syn => syn String T
 p =
           iso (SProxy :: SProxy "A") <|$|> lit "A:"
-    <|||> iso (SProxy :: SProxy "B") <|$|> lit "B::" *|> str
+    <|||> iso (SProxy :: SProxy "B") <|$|> lit "B::" *|> (str `followedBy` "::")
     <|||> iso (SProxy :: SProxy "C") <|$|> lit "C--" *|> int <|*|> lit "/" *|> int
 
 allTests :: TestSuite
 allTests = suite "Syntax for parsing/printing strings" do
-    t A
-    t (B "abc")
-    t (B "")
-    t (C 42 42)
-    t (C 42 5)
-    t (C 0 42)
+    t A "A:"
+    t (B "abc") "B::abc::"
+    t (B "") "B::::"
+    t (C 42 42) "C--42/42"
+    t (C 42 5) "C--42/5"
+    t (C 0 42) "C--0/42"
     where
-        t value = unsafePartial do
+        t value expected = unsafePartial do
             let printed = fromJust $ print p "" value
                 parsed = fst $ fromJust $ parse p printed
-            test (show value) $ equal value parsed
+            test (show value <> " <==> " <> expected) $ do
+                equal value parsed
+                equal printed expected
 
 

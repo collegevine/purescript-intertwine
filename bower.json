@@ -1,6 +1,6 @@
 {
   "name": "purescript-intertwine",
-  "description": "PureScript's implementation of Argonaut",
+  "description": "Reversible printing/parsing",
   "authors": [
     "Fyodor Soikin <fyodor@collegevine.com>",
     "CollegeVine"
