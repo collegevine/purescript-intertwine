@@ -2,11 +2,14 @@ module Test.Route where
 
 import Prelude
 
+import Control.Alt ((<|>))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Data.Intertwine.Route (Ctor(..), PathInfo(..), RoutesDef, end, constValue, seg, parseRoute, printRoute, query, segValue, (*|>), (<|*|>), (<|:|>), (<|||>))
+import Data.Int as Int
+import Data.Intertwine.Route (class PathPiece, Ctor(..), PathInfo(..), RoutesDef, constValue, end, newtypeQuery, newtypeSeg, parseRoute, printRoute, query, query', seg, segValue, segValue', (*|>), (<|*|>), (<|:|>), (<|||>))
 import Data.Intertwine.Syntax ((<|*))
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
@@ -19,6 +22,10 @@ data Route
     | B String
     | C Int (Maybe Int)
     | D SubRoute
+    | CT_Seg CustomType
+    | CT_NewtypeSeg CustomType
+    | CT_Query (Maybe CustomType)
+    | CT_NewtypeQuery (Maybe CustomType)
 
 data SubRoute
     = X Int
@@ -27,6 +34,15 @@ data SubRoute
 data R2
     = R2A (Maybe String)
     | R2B
+
+-- | I'm pretending that I don't control this type, so I can test how it works
+-- | with `segValue'`, `query'`, `newtypeSeg`, and `newtypeQuery`
+data CustomType
+    = CT1 String
+    | CT2 Int
+
+newtype Wrapper = Wrapper CustomType
+derive instance newtypeWrapper :: Newtype Wrapper _
 
 derive instance gRoute :: Generic Route _
 derive instance eqRoute :: Eq Route
@@ -40,6 +56,14 @@ derive instance gR2 :: Generic R2 _
 derive instance eqR2 :: Eq R2
 instance showR2 :: Show R2 where show = genericShow
 
+derive instance gCustomType :: Generic CustomType _
+derive instance eqCustomType :: Eq CustomType
+instance showCustomType :: Show CustomType where show = genericShow
+
+instance ppWrapper :: PathPiece Wrapper where
+    toPathSegment = unwrap >>> printCustomType
+    fromPathSegment = Just <<< wrap <<< CT1
+
 route :: RoutesDef PathInfo Route
 route =
           (Ctor::Ctor "Root") <|:|> end
@@ -47,7 +71,12 @@ route =
     <|||> (Ctor::Ctor "B") <|:|> seg "b" *|> segValue <|* end
     <|||> (Ctor::Ctor "C") <|:|> seg "fourty-two" *|> constValue 42 <|*|> constValue (Just 42) <|* end
     <|||> (Ctor::Ctor "C") <|:|> seg "c" *|> seg "d" *|> segValue <|*|> query "second" <|* end
+    <|||> (Ctor::Ctor "C") <|:|> seg "c" *|> seg "d" *|> segValue <|*|> query "second" <|* end
     <|||> (Ctor::Ctor "D") <|:|> seg "d" *|> subRoute <|* end
+    <|||> (Ctor::Ctor "CT_Seg") <|:|> seg "ct_seg" *|> segValue' printCustomType parsCustomType <|* end
+    <|||> (Ctor::Ctor "CT_NewtypeSeg") <|:|> seg "ct_ntseg" *|> newtypeSeg Wrapper <|* end
+    <|||> (Ctor::Ctor "CT_Query") <|:|> seg "ct_q" *|> query' printCustomType parsCustomType "q" <|* end
+    <|||> (Ctor::Ctor "CT_NewtypeQuery") <|:|> seg "ct_ntq" *|> newtypeQuery Wrapper "q" <|* end
 
 subRoute :: RoutesDef PathInfo SubRoute
 subRoute =
@@ -59,6 +88,13 @@ r2a = (Ctor::Ctor "R2A") <|:|> query "foo" <|* end
 
 r2b :: RoutesDef PathInfo R2
 r2b = (Ctor::Ctor "R2B") <|:|> seg "bar" <|* end
+
+parsCustomType :: String -> Maybe CustomType
+parsCustomType s = (CT2 <$> Int.fromString s) <|> (Just $ CT1 s)
+
+printCustomType :: CustomType -> String
+printCustomType (CT1 s) = s
+printCustomType (CT2 i) = show i
 
 allTests :: TestSuite
 allTests = suite "Printing/parsing routes" do
@@ -73,6 +109,16 @@ allTests = suite "Printing/parsing routes" do
     t route (D $ X 42)              "/d/42"
     t route (D $ Y $ Just "splat")  "/d/y?s=splat"
     t route (D $ Y Nothing )        "/d/y"
+
+    t route (CT_Seg $ CT1 "foo")           "/ct_seg/foo"
+    t route (CT_Seg $ CT2 42)              "/ct_seg/42"
+    t route (CT_NewtypeSeg $ CT1 "foo")    "/ct_ntseg/foo"
+
+    t route (CT_Query $ Just $ CT1 "foo")         "/ct_q?q=foo"
+    t route (CT_Query $ Just $ CT2 42)            "/ct_q?q=42"
+    t route (CT_Query Nothing)                    "/ct_q"
+    t route (CT_NewtypeQuery $ Just $ CT1 "foo")  "/ct_ntq?q=foo"
+    t route (CT_NewtypeQuery Nothing)             "/ct_ntq"
 
     let testR2 (r :: RoutesDef PathInfo R2) = do
             t r (R2A Nothing)           "/"

@@ -9,9 +9,13 @@ module Data.Intertwine.Route
 
     , end
     , seg
+    , segValue'
     , segValue
+    , newtypeSeg
     , constValue
+    , query'
     , query
+    , newtypeQuery
 
     , module SyntaxReexport
     , module Data.Intertwine.Route.PathPiece
@@ -27,6 +31,7 @@ import Data.Intertwine.Syntax (Ctor(..), (<|$|>), (<|:|>), (<|*|>), (*|>), (<|||
 import Data.Intertwine.Syntax (class Syntax, atom, parse, print)
 import Data.Lens (Lens', lens, (^.), (%~), (.~))
 import Data.Maybe (Maybe(..))
+import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
 
@@ -100,29 +105,74 @@ constValue theValue = mkAtom prnt pars
 -- | and tries to parse it into a value of the given type using the `PathPiece`
 -- | instance.
 segValue :: forall a route. IsRoute route => PathPiece a => RoutesDef route a
-segValue = mkAtom prnt pars
+segValue = segValue' toPathSegment fromPathSegment
+
+-- | A value of the given type as URL segment. This function is similar to
+-- | `segValue`, but it uses an extra wrapping type that has an instance of
+-- | `Newtype` and an instance of `PathPiece`. This is handy for defining
+-- | `PathPiece` logic for types you don't control. The first parameter is not
+-- | used, it's only present for type inference.
+newtypeSeg :: forall w a route. Newtype w a => IsRoute route => PathPiece w
+    => (a -> w) -> RoutesDef route a
+newtypeSeg _ = segValue'
+    ((wrap :: a -> w) >>> toPathSegment)
+    (map (unwrap :: w -> a) <<< fromPathSegment)
+
+-- | A value of the given type as URL segment. During printing, the printer
+-- | outputs the value as a URL segment, using the provided printing function to
+-- | convert it to a string. During parsing, the parser consumes a URL segment
+-- | and tries to parse it into a value of the given type using the provided
+-- | parsing function.
+segValue' :: forall a route. IsRoute route
+    => (a -> String)
+    -> (String -> Maybe a)
+    -> RoutesDef route a
+segValue' printA parseA = mkAtom prnt pars
     where
         prnt pi a =
-            Just $ appendSeg (toPathSegment a) pi
+            Just $ appendSeg (printA a) pi
         pars r = do
             l <- Array.uncons (r^.routeSegments)
-            a <- fromPathSegment l.head
+            a <- parseA l.head
             pure $ Tuple (r # routeSegments .~ l.tail) a
 
 -- | QueryString value. During printing adds the printed value to the
 -- | QueryString under given key. During parsing, looks up the value in the
 -- | QueryString.
 query :: forall a route. IsRoute route => PathPiece a => String -> RoutesDef route (Maybe a)
-query key = mkAtom prnt \pi -> pars pi <|> fallback pi
+query key = query' toPathSegment fromPathSegment key
+
+-- | QueryString value. This function is similar to `query`, but it uses an
+-- | extra wrapping type that has an instance of `Newtype` and an instance of
+-- | `PathPiece`. This is handy for defining `PathPiece` logic for types you
+-- | don't control. The first parameter is not used, it's only present for type
+-- | inference.
+newtypeQuery :: forall a w route. Newtype w a => IsRoute route => PathPiece w
+    => (a -> w) -> String -> RoutesDef route (Maybe a)
+newtypeQuery _ key = query'
+    ((wrap :: a -> w) >>> toPathSegment)
+    (map (unwrap :: w -> a) <<< fromPathSegment)
+    key
+
+-- | QueryString value. During printing adds the printed value (converted via
+-- | the given printing function) to the QueryString under given key. During
+-- | parsing, looks up the value in the QueryString and attempts to parse it
+-- | with the given parsing function.
+query' :: forall a route. IsRoute route
+    => (a -> String)
+    -> (String -> Maybe a)
+    -> String
+    -> RoutesDef route (Maybe a)
+query' printA parseA key = mkAtom prnt \pi -> pars pi <|> fallback pi
     where
         prnt r Nothing =
             Just r
         prnt r (Just a) =
-            Just $ r # routeQueryString %~ Obj.insert key (toPathSegment a)
+            Just $ r # routeQueryString %~ Obj.insert key (printA a)
 
         pars r = do
             v <- Obj.lookup key $ r^.routeQueryString
-            a <- fromPathSegment v
+            a <- parseA v
             pure $ Tuple (r # routeQueryString %~ Obj.delete key) (Just a)
 
         fallback r =
