@@ -21,8 +21,8 @@ import Data.Maybe (fromJust)
 import Data.Symbol (SProxy(..))
 import Data.Tuple (fst)
 import Partial.Unsafe (unsafePartial)
-import Test.Unit (TestSuite, suite, test)
-import Test.Unit.Assert (equal)
+import Test.Spec (Spec, describe, it)
+import Test.Spec.Assertions (shouldEqual)
 
 data T
     = A
@@ -39,8 +39,8 @@ p =
     <|||> iso (SProxy :: SProxy "B") <|$|> lit "B::" *|> (str `followedBy` "::")
     <|||> iso (SProxy :: SProxy "C") <|$|> lit "C--" *|> int <|*|> lit "/" *|> int
 
-allTests :: TestSuite
-allTests = suite "Syntax for parsing/printing strings" do
+allTests :: Spec Unit
+allTests = describe "Syntax for parsing/printing strings" do
     t A "A:"
     t (B "abc") "B::abc::"
     t (B "") "B::::"
@@ -51,8 +51,8 @@ allTests = suite "Syntax for parsing/printing strings" do
         t value expected = unsafePartial do
             let printed = fromJust $ print p "" value
                 parsed = fst $ fromJust $ parse p printed
-            test (show value <> " <==> " <> expected) $ do
-                equal value parsed
-                equal printed expected
+            it (show value <> " <==> " <> expected) $ do
+                shouldEqual value parsed
+                shouldEqual printed expected
 
 

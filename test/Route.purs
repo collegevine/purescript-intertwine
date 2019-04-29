@@ -13,11 +13,11 @@ import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.String as String
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
-import Test.Unit (TestSuite, suite, test)
-import Test.Unit.QuickCheck (quickCheck)
-import Test.Unit.Assert (equal)
 import Test.QuickCheck (Result, (===))
 import Test.QuickCheck.Arbitrary (class Arbitrary, genericArbitrary)
+import Test.Spec (Spec, describe, it)
+import Test.Spec.Assertions (shouldEqual)
+import Test.Spec.QuickCheck (quickCheck)
 
 data Route
     = StandardRoute StandardRoute
@@ -26,7 +26,7 @@ data Route
     | CT_Query (Maybe CustomType)
     | CT_NewtypeQuery (Maybe CustomType)
 
-data StandardRoute 
+data StandardRoute
     = Root
     | A
     | B String
@@ -41,7 +41,7 @@ data R2
     = R2A (Maybe String)
     | R2B
 
--- | I'm pretending that I don't control this type, so I can test how it works
+-- | I'm pretending that I don't control this type, so I can it how it works
 -- | with `segValue'`, `query'`, `newtypeSeg`, and `newtypeQuery`
 data CustomType
     = CT1 String
@@ -85,7 +85,7 @@ route =
     <|||> (Ctor::Ctor "CT_NewtypeQuery") <|:|> seg "ct_ntq" *|> newtypeQuery Wrapper "q" <|* end
 
 standardRoute :: RoutesDef PathInfo StandardRoute
-standardRoute = 
+standardRoute =
           (Ctor::Ctor "Root") <|:|> end
     <|||> (Ctor::Ctor "A") <|:|> seg "a" <|* end
     <|||> (Ctor::Ctor "B") <|:|> seg "b" *|> segValue <|* end
@@ -115,11 +115,11 @@ printCustomType (CT2 i) = show i
 isomorphicProp :: forall r. Eq r => Show r => RoutesDef PathInfo r -> r -> Result
 isomorphicProp rdef r = Just r === (printRoute rdef r >>= parseRoute rdef)
 
-allTests :: TestSuite
+allTests :: Spec Unit
 allTests = do
-    suite "Quickcheck- isomorphic print/parse" do
-        test "StandardRoute" $ quickCheck $ isomorphicProp standardRoute
-    suite "Printing/parsing routes" do
+    describe "Quickcheck- isomorphic print/parse" do
+        it "StandardRoute" $ quickCheck $ isomorphicProp standardRoute
+    describe "Printing/parsing routes" do
         t route (StandardRoute Root)                    "/"
         t route (StandardRoute A)                       "/a"
         t route (StandardRoute (B "abc"))               "/b/abc"
@@ -149,12 +149,12 @@ allTests = do
         testR2 $ r2a <|||> r2b
         testR2 $ r2b <|||> r2a
     where
-        t :: forall r. Show r => Eq r => RoutesDef PathInfo r -> r -> String -> TestSuite
-        t syn value expectedUrl = test (show value <> " == " <> expectedUrl) do
+        t :: forall r. Show r => Eq r => RoutesDef PathInfo r -> r -> String -> Spec Unit
+        t syn value expectedUrl = it (show value <> " == " <> expectedUrl) do
             let printed = printRoute syn value
                 parsed = parseRoute syn =<< printed
-            equal (Just expectedUrl) (showPath <$> printed)
-            equal (Just value) parsed
+            shouldEqual (Just expectedUrl) (showPath <$> printed)
+            shouldEqual (Just value) parsed
 
         showPath (PathInfo segs query) = "/" <> showSegs <> qMark <> showQuery
             where

@@ -4,10 +4,11 @@ import Prelude
 
 import Effect (Effect)
 import Test.Route as Route
+import Test.Spec.Reporter (consoleReporter)
+import Test.Spec.Runner (run)
 import Test.Text as Text
-import Test.Unit.Main (runTest)
 
 main :: Effect Unit
-main = runTest do
+main = run [consoleReporter] do
     Text.allTests
     Route.allTests
