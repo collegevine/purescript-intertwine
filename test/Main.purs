@@ -9,5 +9,5 @@ import Test.Unit.Main (runTest)
 
 main :: Effect Unit
 main = runTest do
-  Text.allTests
-  Route.allTests
+    Text.allTests
+    Route.allTests
