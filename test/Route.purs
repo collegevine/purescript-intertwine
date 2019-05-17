@@ -6,7 +6,7 @@ import Control.Alt ((<|>))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Int as Int
-import Data.Intertwine.Combinators (isoFlip, isoTraverse, isoWrap)
+import Data.Intertwine.Combinators (isoTraverse, isoUnwrap)
 import Data.Intertwine.Route (class PathPiece, Ctor(..), PathInfo(..), RoutesDef, constValue, end, parseRoute, printRoute, query, query', seg, segValue, segValue', (*|>), (<|$|>), (<|*|>), (<|:|>), (<|||>))
 import Data.Intertwine.Syntax ((<|*))
 import Data.Maybe (Maybe(..))
@@ -85,7 +85,7 @@ route =
     <|||> (Ctor::Ctor "CT_Query") <|:|> seg "ct_q" *|> query' printCustomType parsCustomType "q" <|* end
     <|||> (Ctor::Ctor "CT_NewtypeQuery") <|:|> seg "ct_ntq" *|> (isoTraverse asCustomType <|$|> query "q") <|* end
     where
-        asCustomType = isoFlip $ isoWrap Wrapper
+        asCustomType = isoUnwrap Wrapper
 
 standardRoute :: RoutesDef PathInfo StandardRoute
 standardRoute =

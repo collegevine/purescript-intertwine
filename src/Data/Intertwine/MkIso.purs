@@ -20,10 +20,10 @@ import Data.Intertwine.Iso (Iso(..))
 -- |
 -- |     data T = A | B String | C Int Number | D Boolean Int String
 -- |
--- |     iso (SProxy :: SProxy "A") :: Iso T Unit
--- |     iso (SProxy :: SProxy "B") :: Iso T String
--- |     iso (SProxy :: SProxy "C") :: Iso T (Tuple Int Number)
--- |     iso (SProxy :: SProxy "D") :: Iso T (Tuple Boolean (Tuple Int String))
+-- |     iso (SProxy :: SProxy "A") :: Iso Unit T
+-- |     iso (SProxy :: SProxy "B") :: Iso String T
+-- |     iso (SProxy :: SProxy "C") :: Iso (Tuple Int Number) T
+-- |     iso (SProxy :: SProxy "D") :: Iso (Tuple Boolean (Tuple Int String)) T
 -- |
 -- | Such tupling is necessary for the implementation of both printers and
 -- | parsers from the same code structure. See ../Syntax.purs for a more
@@ -52,36 +52,35 @@ import Data.Intertwine.Iso (Iso(..))
 -- far as I can tell, the compiler always generates generic rep types this
 -- way.
 class MkIso t ctor tuple | t ctor -> tuple where
-    iso :: SProxy ctor -> Iso t tuple
+    iso :: SProxy ctor -> Iso tuple t
 
 -- Iso for a single constructor
 instance mkIsoCtor :: ArgsAsTuple args argsAsTuple => MkIso (Constructor name args) name argsAsTuple where
-    iso _ = Iso {
-        apply: \(Constructor args) -> Just $ argsToTuple args,
-        inverse: Just <<< Constructor <<< tupleToArgs
-    }
+    iso _ = Iso
+        { apply: Just <<< Constructor <<< tupleToArgs
+        , inverse: \(Constructor args) -> Just $ argsToTuple args
+        }
 
 -- Iso for a constructor that has a chain of other constructors attached.
 else instance mkIsoSumLeft :: ArgsAsTuple args argsAsTuple => MkIso (Sum (Constructor ctor args) rest) ctor argsAsTuple where
-    iso _ = Iso {
-        apply: \s -> case s of
-            Inl (Constructor args) -> Just $ argsToTuple args
-            Inr _ -> Nothing,
-        inverse:
+    iso _ = Iso
+        { apply:
             Just <<< Inl <<< Constructor <<< tupleToArgs
-    }
+        , inverse: \s -> case s of
+            Inl (Constructor args) -> Just $ argsToTuple args
+            Inr _ -> Nothing
+        }
 
 -- Iso for a case when the first constructor in the chain doesn't match the
 -- given constructor name. In this case, we just delegate to the instance of
 -- this class for the rest of the chian (if such instance exists).
 else instance mkIsoSumRight :: MkIso rest ctor tuple => MkIso (Sum (Constructor anotherName y) rest) ctor tuple where
-    iso _ =
-        Iso {
-            apply: \s -> case s of
-                Inl _ -> Nothing
-                Inr rest -> restIso.apply rest,
-            inverse:
-                map Inr <<< restIso.inverse
+    iso _ = Iso
+        { apply:
+            map Inr <<< restIso.apply
+        , inverse: \s -> case s of
+            Inl _ -> Nothing
+            Inr rest -> restIso.inverse rest
         }
         where
             Iso restIso = iso (SProxy :: SProxy ctor)
@@ -89,10 +88,9 @@ else instance mkIsoSumRight :: MkIso rest ctor tuple => MkIso (Sum (Constructor 
 -- The top-level instance: converts from the sum type to generic rep and then
 -- delegates to one of the instances above.
 else instance mkIso :: (Generic t rep, MkIso rep ctor tuple) => MkIso t ctor tuple where
-    iso _ =
-        Iso {
-            apply: repIso.apply <<< from,
-            inverse: map to <<< repIso.inverse
+    iso _ = Iso
+        { apply: map to <<< repIso.apply
+        , inverse: repIso.inverse <<< from
         }
         where
             Iso repIso = iso (SProxy :: SProxy ctor)

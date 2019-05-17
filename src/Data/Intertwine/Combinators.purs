@@ -4,6 +4,7 @@ module Data.Intertwine.Combinators
     , isoTraverse
     , isoFrom
     , isoWrap
+    , isoUnwrap
     , isoJust
     ) where
 
@@ -64,14 +65,32 @@ isoTraverse (Iso i) = Iso { apply: sequence <<< map i.apply, inverse: sequence <
 -- |     newtype N = N Int
 -- |     derive instance newtypeN :: Newtype N _
 -- |
--- |     isoN :: Iso N N
+-- |     isoN :: Iso Int N
 -- |     isoN = isoWrap N
+-- |
+-- |     > isoN.apply 42 == Just (N 42)
+-- |     > isoN.inverse (N 42) == Just 42
+-- |
+isoWrap :: forall w a. Newtype w a => (a -> w) -> Iso a w
+isoWrap _ = isoFrom wrap unwrap
+
+-- | The opposite of `isoWrap`: constructs a never-failing `Iso` that maps a value to a `newtype` that wraps it.
+-- | The intended use is to provide the `newtype`'s constructor as first
+-- | argument for the purpose of type inference.
+-- |
+-- | Example:
+-- |
+-- |     newtype N = N Int
+-- |     derive instance newtypeN :: Newtype N _
+-- |
+-- |     isoN :: Iso N Int
+-- |     isoN = isoUnwrap N
 -- |
 -- |     > isoN.apply (N 42) == Just 42
 -- |     > isoN.inverse 42 == Just (N 42)
 -- |
-isoWrap :: forall w a. Newtype w a => (a -> w) -> Iso w a
-isoWrap _ = isoFrom unwrap wrap
+isoUnwrap :: forall w a. Newtype w a => (a -> w) -> Iso w a
+isoUnwrap = isoFlip <<< isoWrap
 
 -- | An `Iso` that wraps any value in a `Just`, and unwraps on inverse, failing
 -- | when given `Nothing`.

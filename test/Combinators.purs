@@ -3,7 +3,7 @@ module Test.Combinators where
 import Prelude
 
 import Data.Either (Either(..))
-import Data.Intertwine.Combinators (isoFlip, isoFrom, isoJust, isoTraverse, isoWrap)
+import Data.Intertwine.Combinators (isoFlip, isoFrom, isoJust, isoTraverse, isoUnwrap, isoWrap)
 import Data.Intertwine.Iso (Iso(..))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
@@ -27,8 +27,12 @@ allTests = describe "Combinators" do
             shouldEqual (inv (isoFlip plus5) 42) (Just 47)
     describe "isoWrap" do
         it "wraps newtype constructor" do
-            shouldEqual (ap (isoWrap N) (N 42)) (Just 42)
-            shouldEqual (inv (isoWrap N) 42) (Just (N 42))
+            shouldEqual (ap (isoWrap N) 42) (Just (N 42))
+            shouldEqual (inv (isoWrap N) (N 42)) (Just 42)
+    describe "isoUnrap" do
+        it "unwraps newtype constructor" do
+            shouldEqual (ap (isoUnwrap N) (N 42)) (Just 42)
+            shouldEqual (inv (isoUnwrap N) 42) (Just (N 42))
     describe "isoJust" do
         it "wraps in Just" do
             shouldEqual (ap isoJust 42) (Just (Just 42))
