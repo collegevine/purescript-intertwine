@@ -26,13 +26,14 @@ import Data.Intertwine.Iso (Iso(..))
 -- |     iso (SProxy :: SProxy "D") :: Iso (Tuple Boolean (Tuple Int String)) T
 -- |
 -- | Such tupling is necessary for the implementation of both printers and
--- | parsers from the same code structure. See ../Syntax.purs for a more
--- | detailed explanation.
+-- | parsers from the same code structure. See
+-- | [`Syntax`](#t:Data.Intertwine.Syntax) for a more detailed explanation.
 -- |
--- | The resulting Iso can convert "forward" (i.e. from T to the corresponding
--- | tuple) only when the given T value was constructed with the given
--- | constructor, returning `Nothing` for all other constructors. It can always
--- | convert "backward" (i.e. from tuple to T).
+-- | The resulting [`Iso`](#t:Iso) can always convert "forward" (i.e. from
+-- | tupled arguments to `T`), but it can only convert "backward" (i.e. from T
+-- | to the corresponding tuple) when the given `T` value was constructed with
+-- | the given constructor, returning `Nothing` for all other constructors.
+
 --
 -- Class parameters:
 --
