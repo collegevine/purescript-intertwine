@@ -93,15 +93,14 @@ newtype Iso a b = Iso { apply :: a -> Maybe b, inverse :: b -> Maybe b }
 If we were to encode such isomorphism by hand, it would look something like this (using the above definition of `Foo`):
 
 ```purescript
-iso_bar :: Iso Foo (c, (a, b))
-iso_bar = Iso {
-    apply: \foo -> case foo of
+iso_bar :: Iso (c, (a, b)) Foo
+iso_bar = Iso
+    { apply: \(c, (a, b)) ->
+        Just (Bar c a b)
+    , inverse: \foo -> case foo of
         Bar c a b -> Just (c, (a, b))
         _ -> Nothing
-    ,
-    inverse: \(c, (a, b)) ->
-        Just (Bar c a b)
-}
+    }
 ```
 
 And then we can inject/apply this `Iso` to the tuple-typed syntax with the `<|$|>` operator:

@@ -68,15 +68,15 @@ import Data.Tuple (Tuple(..), fst, snd, swap)
 -- | constructor-derived Iso:
 -- |
 -- |     p :: Printer (a, b)
--- |     i :: Iso T (a, b)
+-- |     i :: Iso (a, b) T
 -- |     i `synInject` p :: Printer T
 -- |
 -- | To accomodate this, we generate the Iso instances for every constructor in
 -- | such a way that converts the constructor's parameters into tuples, e.g.:
 -- |
 -- |     data T = A Int String | B Int String Boolean
--- |     iso "A"  :: Iso T (Int, String)
--- |     iso "B"  :: Iso T (Int, (String, Boolean))
+-- |     iso "A"  :: Iso (Int, String) T
+-- |     iso "B"  :: Iso (Int, (String, Boolean)) T
 -- |
 -- | This structure nicely matches the structure that results from repeatedly
 -- | `synApply`ing printers/parsers, provided both `synApply` and `synInject`
