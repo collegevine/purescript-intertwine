@@ -118,7 +118,7 @@ import Data.Tuple (Tuple(..), fst, snd, swap)
 class Syntax syntax where
     atom :: forall a state. Iso (Tuple state a) (Tuple state Unit) -> syntax state a
     synApply :: forall a b state. syntax state a -> syntax state b -> syntax state (Tuple a b)
-    synInject :: forall a b state. Iso a b -> syntax state b -> syntax state a
+    synInject :: forall a b state. Iso a b -> syntax state a -> syntax state b
     alt :: forall a state. syntax state a -> syntax state a -> syntax state a
 
 
@@ -155,7 +155,7 @@ infixr 5 dropUnitLeft as *|>
 -- | left printer/parser, provided it returns/consumes a unit.
 dropUnitLeft :: forall a syntax state. Syntax syntax => syntax state Unit -> syntax state a -> syntax state a
 dropUnitLeft u ab = i <|$|> u <|*|> ab
-    where i = Iso { apply: Just <<< Tuple unit, inverse: Just <<< snd }
+    where i = Iso { inverse: Just <<< Tuple unit, apply: Just <<< snd }
 
 -- | Combines a printer/parser that consumes/returns a unit with another
 -- | printer/parser in a way that the unit is dropped instead of becoming part
@@ -170,7 +170,7 @@ infixr 5 dropUnitRight as <|*
 -- | right printer/parser, provided it returns/consumes a unit.
 dropUnitRight :: forall a syntax state. Syntax syntax => syntax state a -> syntax state Unit -> syntax state a
 dropUnitRight ab u = i <|$|> ab <|*|> u
-    where i = Iso { apply: \a -> Just $ Tuple a unit, inverse: Just <<< fst }
+    where i = Iso { inverse: \a -> Just $ Tuple a unit, apply: Just <<< fst }
 
 
 -- | This type is equivalent to `SProxy`, but provided here separately for the
@@ -209,7 +209,7 @@ instance printerSyntax :: Syntax Printer where
         s' <- pa $ Tuple state a
         pb $ Tuple s' b
     synInject (Iso i) (Printer pb) = Printer \(Tuple state a) -> do
-        b <- i.apply a
+        b <- i.inverse a
         pb $ Tuple state b
     alt (Printer p1) (Printer p2) = Printer \x -> p1 x <|> p2 x
 
@@ -242,7 +242,7 @@ instance parserSyntax :: Syntax Parser where
         pure $ Tuple (Tuple a b) s''
     synInject (Iso i) (Parser pb) = Parser \s -> do
         Tuple b s' <- pb s
-        a <- i.inverse b
+        a <- i.apply b
         pure $ Tuple a s'
     alt (Parser p1) (Parser p2) = Parser \s -> p1 s <|> p2 s
 

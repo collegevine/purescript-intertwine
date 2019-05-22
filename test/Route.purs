@@ -6,7 +6,8 @@ import Control.Alt ((<|>))
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Int as Int
-import Data.Intertwine.Route (class PathPiece, Ctor(..), PathInfo(..), RoutesDef, constValue, end, newtypeQuery, newtypeSeg, parseRoute, printRoute, query, query', seg, segValue, segValue', (*|>), (<|*|>), (<|:|>), (<|||>))
+import Data.Intertwine.Combinators (isoTraverse, isoUnwrap)
+import Data.Intertwine.Route (class PathPiece, Ctor(..), PathInfo(..), RoutesDef, constValue, end, parseRoute, printRoute, query, query', seg, segValue, segValue', (*|>), (<|$|>), (<|*|>), (<|:|>), (<|||>))
 import Data.Intertwine.Syntax ((<|*))
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap, wrap)
@@ -80,9 +81,11 @@ route :: RoutesDef PathInfo Route
 route =
           (Ctor::Ctor "StandardRoute") <|:|> standardRoute <|* end
     <|||> (Ctor::Ctor "CT_Seg") <|:|> seg "ct_seg" *|> segValue' printCustomType parsCustomType <|* end
-    <|||> (Ctor::Ctor "CT_NewtypeSeg") <|:|> seg "ct_ntseg" *|> newtypeSeg Wrapper <|* end
+    <|||> (Ctor::Ctor "CT_NewtypeSeg") <|:|> seg "ct_ntseg" *|> (asCustomType <|$|> segValue) <|* end
     <|||> (Ctor::Ctor "CT_Query") <|:|> seg "ct_q" *|> query' printCustomType parsCustomType "q" <|* end
-    <|||> (Ctor::Ctor "CT_NewtypeQuery") <|:|> seg "ct_ntq" *|> newtypeQuery Wrapper "q" <|* end
+    <|||> (Ctor::Ctor "CT_NewtypeQuery") <|:|> seg "ct_ntq" *|> (isoTraverse asCustomType <|$|> query "q") <|* end
+    where
+        asCustomType = isoUnwrap Wrapper
 
 standardRoute :: RoutesDef PathInfo StandardRoute
 standardRoute =

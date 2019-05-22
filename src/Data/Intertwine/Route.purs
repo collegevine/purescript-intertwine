@@ -11,11 +11,9 @@ module Data.Intertwine.Route
     , seg
     , segValue'
     , segValue
-    , newtypeSeg
     , constValue
     , query'
     , query
-    , newtypeQuery
 
     , module SyntaxReexport
     , module Data.Intertwine.Route.PathPiece
@@ -31,7 +29,6 @@ import Data.Intertwine.Syntax (Ctor(..), (<|$|>), (<|:|>), (<|*|>), (*|>), (<|||
 import Data.Intertwine.Syntax (class Syntax, atom, parse, print)
 import Data.Lens (Lens', lens, (^.), (%~), (.~))
 import Data.Maybe (Maybe(..))
-import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.Tuple (Tuple(..))
 import Foreign.Object as Obj
 
@@ -107,17 +104,6 @@ constValue theValue = mkAtom prnt pars
 segValue :: forall a route. IsRoute route => PathPiece a => RoutesDef route a
 segValue = segValue' toPathSegment fromPathSegment
 
--- | A value of the given type as URL segment. This function is similar to
--- | `segValue`, but it uses an extra wrapping type that has an instance of
--- | `Newtype` and an instance of `PathPiece`. This is handy for defining
--- | `PathPiece` logic for types you don't control. The first parameter is not
--- | used, it's only present for type inference.
-newtypeSeg :: forall w a route. Newtype w a => IsRoute route => PathPiece w
-    => (a -> w) -> RoutesDef route a
-newtypeSeg _ = segValue'
-    ((wrap :: a -> w) >>> toPathSegment)
-    (map (unwrap :: w -> a) <<< fromPathSegment)
-
 -- | A value of the given type as URL segment. During printing, the printer
 -- | outputs the value as a URL segment, using the provided printing function to
 -- | convert it to a string. During parsing, the parser consumes a URL segment
@@ -141,18 +127,6 @@ segValue' printA parseA = mkAtom prnt pars
 -- | QueryString.
 query :: forall a route. IsRoute route => PathPiece a => String -> RoutesDef route (Maybe a)
 query key = query' toPathSegment fromPathSegment key
-
--- | QueryString value. This function is similar to `query`, but it uses an
--- | extra wrapping type that has an instance of `Newtype` and an instance of
--- | `PathPiece`. This is handy for defining `PathPiece` logic for types you
--- | don't control. The first parameter is not used, it's only present for type
--- | inference.
-newtypeQuery :: forall a w route. Newtype w a => IsRoute route => PathPiece w
-    => (a -> w) -> String -> RoutesDef route (Maybe a)
-newtypeQuery _ key = query'
-    ((wrap :: a -> w) >>> toPathSegment)
-    (map (unwrap :: w -> a) <<< fromPathSegment)
-    key
 
 -- | QueryString value. During printing adds the printed value (converted via
 -- | the given printing function) to the QueryString under given key. During
