@@ -27,9 +27,10 @@ import Data.Intertwine.Iso (Iso(..))
 -- |
 -- | Such tupling is necessary for the implementation of both printers and
 -- | parsers from the same code structure. See
--- | [`Syntax`](#t:Data.Intertwine.Syntax) for a more detailed explanation.
+-- | [`Syntax`](https://pursuit.purescript.org/packages/purescript-intertwine/docs/Data.Intertwine.Syntax)
+-- | for a more detailed explanation.
 -- |
--- | The resulting [`Iso`](#t:Iso) can always convert "forward" (i.e. from
+-- | The resulting `Iso` can always convert "forward" (i.e. from
 -- | tupled arguments to `T`), but it can only convert "backward" (i.e. from T
 -- | to the corresponding tuple) when the given `T` value was constructed with
 -- | the given constructor, returning `Nothing` for all other constructors.

@@ -15,17 +15,17 @@ import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype, unwrap, wrap)
 import Data.Traversable (class Traversable, sequence)
 
--- | Constructs a never-failing [`Iso`](#t:Iso) out of given "apply" and
+-- | Constructs a never-failing `Iso` out of given "apply" and
 -- | "inverse" functions
 isoFrom :: forall a b. (a -> b) -> (b -> a) -> Iso a b
 isoFrom apply inverse = Iso { apply: Just <<< apply, inverse: Just <<< inverse }
 
--- | Revereses the direction of an [`Iso`](#t:Iso)
+-- | Revereses the direction of an `Iso`
 isoFlip :: forall a b. Iso a b -> Iso b a
 isoFlip (Iso i) = Iso { apply: i.inverse, inverse: i.apply }
 
--- | Given a `Traversable` and an [`Iso`](#t:Iso) that maps some values `a` and
--- | `b`, produces a new [`Iso`](#t:Iso) that maps those values wrapped in the
+-- | Given a `Traversable` and an `Iso` that maps some values `a` and
+-- | `b`, produces a new `Iso` that maps those values wrapped in the
 -- | `Traversable` - `f a` and `f b`. This is handy for working for `Maybe`, for
 -- | example:
 -- |
@@ -58,7 +58,7 @@ isoFlip (Iso i) = Iso { apply: i.inverse, inverse: i.apply }
 isoTraverse :: forall f a b. Traversable f => Iso a b -> Iso (f a) (f b)
 isoTraverse (Iso i) = Iso { apply: sequence <<< map i.apply, inverse: sequence <<< map i.inverse }
 
--- | Constructs a never-failing [`Iso`](#t:Iso) mapping a `newtype` to the type
+-- | Constructs a never-failing `Iso` mapping a `newtype` to the type
 -- | it wraps. The intended use is to provide the `newtype`'s constructor as
 -- | first argument for the purpose of type inference.
 -- |
@@ -76,7 +76,7 @@ isoTraverse (Iso i) = Iso { apply: sequence <<< map i.apply, inverse: sequence <
 isoWrap :: forall w a. Newtype w a => (a -> w) -> Iso a w
 isoWrap _ = isoFrom wrap unwrap
 
--- | The opposite of `isoWrap`: constructs a never-failing [`Iso`](#t:Iso) that
+-- | The opposite of `isoWrap`: constructs a never-failing `Iso` that
 -- | maps a value to a `newtype` that wraps it. The intended use is to provide
 -- | the `newtype`'s constructor as first argument for the purpose of type
 -- | inference.
@@ -95,7 +95,7 @@ isoWrap _ = isoFrom wrap unwrap
 isoUnwrap :: forall w a. Newtype w a => (a -> w) -> Iso w a
 isoUnwrap = isoFlip <<< isoWrap
 
--- | An [`Iso`](#t:Iso) that wraps any value in a `Just`, and unwraps on
+-- | An `Iso` that wraps any value in a `Just`, and unwraps on
 -- | inverse, failing when given `Nothing`.
 -- |
 -- | Example:
