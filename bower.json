@@ -10,7 +10,6 @@
     "type": "git",
     "url": "https://github.com/collegevine/purescript-intertwine.git"
   },
-
   "ignore": [
     "**/.*",
     "node_modules",
@@ -19,11 +18,11 @@
   ],
   "dependencies": {
     "purescript-foreign": "^5.0.0",
-    "purescript-foreign-object": "^1.0.0",
-    "purescript-generics-rep": "^6.1.0",
-    "purescript-maybe": "^4.0.0",
-    "purescript-prelude": "^4.1.0",
-    "purescript-profunctor-lenses": "^4.0.0",
+    "purescript-foreign-object": "^2.0.2",
+    "purescript-generics-rep": "^6.1.1",
+    "purescript-maybe": "^4.0.1",
+    "purescript-prelude": "^4.1.1",
+    "purescript-profunctor-lenses": "^6.2.0",
     "purescript-strings": "^4.0.1",
     "purescript-unicode": "^4.0.1"
   },
@@ -32,5 +31,9 @@
     "purescript-spec": "^3.1.0",
     "purescript-spec-quickcheck": "^3.1.0",
     "purescript-quickcheck": "^5.0.0"
+  },
+  "resolutions": {
+    "purescript-typelevel-prelude": ">= 4.0.0 < 6.0.0",
+    "purescript-record": "^2.0.0"
   }
 }
