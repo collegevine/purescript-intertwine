@@ -2,7 +2,7 @@ version: 2.1
 
 jobs:
   build:
-    working_directory: ~/cv
+    working_directory: ~/intertwine
 
     docker:
     - image: collegevine/rails-build
@@ -10,7 +10,7 @@ jobs:
     parallelism: 1
 
     steps:
-    - checkout: { path: "~/cv" }
+    - checkout: { path: "~/intertwine" }
 
     - restore_cache:
         keys:
