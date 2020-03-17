@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "install": "bower install",
+    "install": "bower install --allow-root",
     "build": "pulp build",
     "test": "pulp test"
   },
