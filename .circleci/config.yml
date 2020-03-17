@@ -14,13 +14,13 @@ jobs:
 
     - restore_cache:
         keys:
-          - intertwine-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
-          - intertwine-{{ .Branch }}-
+          - intertwine-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+          - intertwine-v2-{{ .Branch }}-
 
     - run: npm install && sysconfcpus -n 2 npm run build && sysconfcpus -n 2 npm run test
 
     - save_cache:
-        key: intertwine-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+        key: intertwine-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
         paths:
           - bower_components
           - node_modules
