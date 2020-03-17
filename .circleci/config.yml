@@ -2,62 +2,30 @@ version: 2.1
 
 jobs:
   build:
-    working_directory: ~/cv
+    working_directory: ~/intertwine
 
     docker:
-    - image: circleci/node:8.11.4-stretch
+    - image: collegevine/rails-build
 
     parallelism: 1
 
     steps:
-    - install-libsysconfcpus
-    - checkout: { path: "~/cv" }
+    - checkout: { path: "~/intertwine" }
 
     - restore_cache:
         keys:
-          - intertwine-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
-          - intertwine-{{ .Branch }}-
+          - intertwine-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+          - intertwine-v2-{{ .Branch }}-
 
-    - run: npm install && npm run build && npm run test
+    - run: >
+        npm install --unsafe-perm
+        && sysconfcpus -n 2 npm run build --unsafe-perm
+        && sysconfcpus -n 2 npm run test --unsafe-perm
 
     - save_cache:
-        key: intertwine-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
+        key: intertwine-v2-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "bower.json" }}
         paths:
           - bower_components
           - node_modules
           - output
           - ~/.cache
-
-commands:
-  # Compilers such as `purs` (and Elm) try to leverage maximum parallelism by running on all
-  # available CPUs. Unfortunately, CircleCI reports the number of host OS CPUs instead of the number
-  # of available ones in our container. We use `libsysconfcpus` to limit the number of CPUs tools
-  # such as `purs` will utilize, to optimize our build time. See:
-  # https://github.com/elm/compiler/issues/1473
-  install-libsysconfcpus:
-    steps:
-      - restore_cache:
-          keys:
-            - libsysconfcpus-{{ .Branch }}
-            - libsysconfcpus-master
-      - run:
-          name: Build sysconfcpus
-          command: >
-            if [ ! -d ~/libsysconfcpus ]; then
-              cd ~;
-              buildDir=pwd;
-              git clone https://github.com/obmarg/libsysconfcpus.git;
-              cd libsysconfcpus;
-              git checkout 8cb9da6602;
-              ./configure;
-              sudo make;
-            fi
-      - save_cache:
-          key: libsysconfcpus-{{ .Branch }}
-          paths:
-            - ~/libsysconfcpus
-      - run:
-          name: Install sysconfcpus
-          command: >
-            cd ~/libsysconfcpus;
-            sudo make install;
