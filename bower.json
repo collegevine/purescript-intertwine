@@ -33,6 +33,7 @@
     "purescript-quickcheck": "^5.0.0"
   },
   "resolutions": {
+    "purescript-typelevel-prelude": ">= 4.0.0 < 6.0.0",
     "purescript-record": "^2.0.0"
   }
 }
