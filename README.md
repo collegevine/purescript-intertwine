@@ -1,5 +1,5 @@
 ## Reversible printing/parsing
-[![CircleCI](https://circleci.com/gh/collegevine/purescript-intertwine.svg?style=svg)](https://circleci.com/gh/collegevine/purescript-intertwine)
+[![build](https://github.com/collegevine/purescript-intertwine/actions/workflows/build.yml/badge.svg)](https://github.com/collegevine/purescript-intertwine/actions/workflows/build.yml)
 
 This is a library for encoding serialization format descriptions that can be used as both printers and parsers for that format, without duplicating the code.
 
